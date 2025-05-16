@@ -10,6 +10,7 @@ import ImageEditor from "./pages/ImageEditor";
 import VideoEditor from "./pages/VideoEditor";
 import ContentLibrary from "./pages/ContentLibrary";
 import Templates from "./pages/Templates";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/video-editor" element={<VideoEditor />} />
             <Route path="/content-library" element={<ContentLibrary />} />
             <Route path="/templates" element={<Templates />} />
+            <Route path="/user-management" element={<UserManagement />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

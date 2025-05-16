@@ -13,11 +13,11 @@ import {
   SidebarTrigger,
   useSidebar
 } from "@/components/ui/sidebar";
-import { ImageIcon, Play, Library, LayoutDashboard, Images } from "lucide-react";
+import { ImageIcon, Play, Library, LayoutDashboard, Images, Users } from "lucide-react";
 
 export function AppSidebar() {
   const sidebar = useSidebar();
-  const collapsed = sidebar?.collapsed || false;
+  const collapsed = sidebar?.state === "collapsed";
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -27,6 +27,7 @@ export function AppSidebar() {
     { title: "Video Editor", url: "/video-editor", icon: Play },
     { title: "Content Library", url: "/content-library", icon: Library },
     { title: "Templates", url: "/templates", icon: Images },
+    { title: "User Management", url: "/user-management", icon: Users },
   ];
 
   const isActive = (path: string) => currentPath === path;
