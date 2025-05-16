@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Image } from 'lucide-react';
-import { filters } from '@/lib/image-editor/filters';
+import { filterOptions } from '@/lib/image-editor/filters';
 
 interface FilterOptionsProps {
   onSelectFilter: (filterName: string) => void;
@@ -19,7 +19,7 @@ const FilterOptions: React.FC<FilterOptionsProps> = ({ onSelectFilter, selectedF
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-3 gap-2">
-          {filters.map((filter) => (
+          {filterOptions.map((filter) => (
             <div
               key={filter.name}
               className={`rounded-lg border p-2 cursor-pointer transition-all hover:border-brand-purple ${

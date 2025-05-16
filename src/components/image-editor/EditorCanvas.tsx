@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Canvas, Image } from 'fabric';
+import { Canvas, Image, Text } from 'fabric';
 import { toast } from 'sonner';
 import { applyBrightnessContrast } from '@/lib/image-editor/filters';
 import type { ImageEditorState } from '@/lib/image-editor/types';
@@ -47,7 +47,13 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ editorState, onImageLoaded 
     reader.onload = (event) => {
       if (!event.target?.result) return;
       
-      Image.fromURL(event.target.result.toString(), (img) => {
+      const imgUrl = event.target.result.toString();
+      
+      // Use the modern fabric.js v6 API
+      Image.fromURL(imgUrl, {
+        crossOrigin: 'anonymous',
+        objectCaching: false
+      }).then(img => {
         if (!fabricRef.current) return;
         
         // Clear canvas
@@ -106,7 +112,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ editorState, onImageLoaded 
     
     const canvas = fabricRef.current;
     
-    const text = new fabric.Text(editorState.text.value, {
+    const text = new Text(editorState.text.value, {
       left: canvas.width! / 2,
       top: canvas.height! / 2,
       fontSize: editorState.text.fontSize,

@@ -1,5 +1,5 @@
 
-import { Canvas, Image, IBaseFilter } from 'fabric';
+import { Canvas, Image } from 'fabric';
 
 export interface ImageEditorState {
   brightness: number;

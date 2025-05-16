@@ -3,15 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Image as ImageIcon, Save, Download } from "lucide-react";
-import { toast } from "sonner";
 import { Canvas, Text } from 'fabric';
+import { toast } from "sonner";
 
 import EditorCanvas from "@/components/image-editor/EditorCanvas";
 import TextControls from "@/components/image-editor/TextControls";
 import FilterOptions from "@/components/image-editor/FilterOptions";
 import ExportOptions from "@/components/image-editor/ExportOptions";
-import { filters } from "@/lib/image-editor/filters";
+import { filterOptions } from "@/lib/image-editor/filters"; 
 import type { ImageEditorState } from "@/lib/image-editor/types";
 
 export default function ImageEditor() {
@@ -67,16 +66,16 @@ export default function ImageEditor() {
     setSelectedFilter(filterName);
     const canvas = fabricCanvasRef.current;
     const activeObjects = canvas.getActiveObjects();
-    const image = activeObjects.find(obj => obj instanceof fabric.Image) as fabric.Image;
+    const imageObject = activeObjects.find(obj => obj instanceof Image) as Image;
     
-    if (!image) {
+    if (!imageObject) {
       toast.error("Please select an image first");
       return;
     }
     
-    const filter = filters.find(f => f.name === filterName);
+    const filter = filterOptions.find(f => f.name === filterName);
     if (filter) {
-      filter.apply(canvas, image);
+      filter.apply(canvas, imageObject);
       toast.success(`Filter "${filterName}" applied`);
     }
   }, []);
@@ -86,7 +85,7 @@ export default function ImageEditor() {
     
     const canvas = fabricCanvasRef.current;
     const dataURL = canvas.toDataURL({
-      format: format,
+      format: format as 'png' | 'jpeg',
       quality: quality,
     });
     
