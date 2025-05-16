@@ -1,6 +1,4 @@
 
-import { Canvas, Image } from 'fabric';
-
 export interface ImageEditorState {
   brightness: number;
   contrast: number;
@@ -16,5 +14,5 @@ export interface ImageEditorState {
 export interface FilterOption {
   name: string;
   preview: string;
-  apply: (canvas: Canvas, imageElement: Image) => void;
+  apply: (imageElement: HTMLImageElement | null) => string;
 }

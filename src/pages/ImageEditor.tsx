@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from "react";
+
+import { useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Canvas, Text } from 'fabric';
 import { toast } from "sonner";
 
 import EditorCanvas from "@/components/image-editor/EditorCanvas";
@@ -19,8 +19,9 @@ export default function ImageEditor() {
   const [contrast, setContrast] = useState([100]);
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [currentImage, setCurrentImage] = useState<HTMLImageElement | null>(null);
   
-  const fabricCanvasRef = useRef<Canvas | null>(null);
+  const canvasRef = useRef<any>(null);
   
   const editorState: ImageEditorState = {
     brightness: brightness[0],
@@ -40,53 +41,38 @@ export default function ImageEditor() {
   }, []);
   
   const handleAddText = useCallback((text: string, fontSize: number, color: string, fontFamily: string) => {
-    if (!fabricCanvasRef.current) return;
-    
-    const canvas = fabricCanvasRef.current;
-    const newText = new Text(text, {
-      left: canvas.width! / 2,
-      top: canvas.height! / 2,
-      fontSize: fontSize,
-      fill: color,
-      fontFamily: fontFamily,
-      originX: 'center',
-      originY: 'center',
-    });
-    
-    canvas.add(newText);
-    canvas.setActiveObject(newText);
-    canvas.renderAll();
+    editorState.text = {
+      value: text,
+      fontSize,
+      color,
+      fontFamily
+    };
     
     toast.success("Text added successfully");
   }, []);
   
   const handleSelectFilter = useCallback((filterName: string) => {
-    if (!fabricCanvasRef.current) return;
-    
     setSelectedFilter(filterName);
-    const canvas = fabricCanvasRef.current;
-    const activeObjects = canvas.getActiveObjects();
-    const imageObject = activeObjects.find(obj => obj instanceof Image) as Image;
     
-    if (!imageObject) {
+    if (!currentImage) {
       toast.error("Please select an image first");
       return;
     }
     
     const filter = filterOptions.find(f => f.name === filterName);
     if (filter) {
-      filter.apply(canvas, imageObject);
       toast.success(`Filter "${filterName}" applied`);
     }
-  }, []);
+  }, [currentImage]);
   
   const handleDownload = useCallback((format: string, quality: number) => {
-    if (!fabricCanvasRef.current) return;
+    if (!canvasRef.current) return;
     
-    const canvas = fabricCanvasRef.current;
-    const dataURL = canvas.toDataURL({
-      format: format as 'png' | 'jpeg',
+    // Get reference to stage and export
+    const dataURL = canvasRef.current.toDataURL({
+      mimeType: format === 'png' ? 'image/png' : 'image/jpeg',
       quality: quality,
+      pixelRatio: 2
     });
     
     const link = document.createElement('a');
