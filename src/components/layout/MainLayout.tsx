@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 
 export function MainLayout() {
   return (
-    <SidebarProvider defaultCollapsed={false} collapsedWidth={64}>
+    <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         

@@ -16,7 +16,8 @@ import {
 import { ImageIcon, Play, Library, LayoutDashboard, Images } from "lucide-react";
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
+  const sidebar = useSidebar();
+  const collapsed = sidebar?.collapsed || false;
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -36,7 +37,7 @@ export function AppSidebar() {
   return (
     <Sidebar
       className={`${collapsed ? "w-16" : "w-64"} transition-all duration-300`}
-      collapsible
+      collapsible="icon"
     >
       <div className="py-4 flex items-center justify-center border-b border-sidebar-border">
         <h1 className={`font-bold text-xl text-white ${collapsed ? "hidden" : "block"}`}>SocialSync</h1>
@@ -49,7 +50,7 @@ export function AppSidebar() {
       </div>
 
       <SidebarContent>
-        <SidebarGroup defaultOpen={true}>
+        <SidebarGroup>
           <SidebarGroupLabel className={collapsed ? "hidden" : "block"}>Main</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

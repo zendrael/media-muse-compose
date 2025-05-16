@@ -1,36 +1,110 @@
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
-import { ImageIcon, Upload, Text, Edit, Download, Image, Save, Check } from "lucide-react";
+import { Upload, Image as ImageIcon, Save, Download } from "lucide-react";
 import { toast } from "sonner";
+import { fabric } from 'fabric';
+
+import EditorCanvas from "@/components/image-editor/EditorCanvas";
+import TextControls from "@/components/image-editor/TextControls";
+import FilterOptions from "@/components/image-editor/FilterOptions";
+import ExportOptions from "@/components/image-editor/ExportOptions";
+import { filters } from "@/lib/image-editor/filters";
+import type { ImageEditorState } from "@/lib/image-editor/types";
 
 export default function ImageEditor() {
-  const [activeTab, setActiveTab] = useState("upload");
+  const [activeTab, setActiveTab] = useState("edit");
   const [brightness, setBrightness] = useState([100]);
   const [contrast, setContrast] = useState([100]);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
-  const handleImageUpload = () => {
-    toast("Image uploaded successfully", {
-      description: "Your image is now ready for editing"
-    });
+  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  
+  const editorState: ImageEditorState = {
+    brightness: brightness[0],
+    contrast: contrast[0],
+    filter: selectedFilter,
+    text: {
+      value: '',
+      fontSize: 20,
+      color: '#000000',
+      fontFamily: 'Arial'
+    }
+  };
+  
+  const handleImageLoaded = useCallback(() => {
+    setImageLoaded(true);
     setActiveTab("edit");
-  };
+  }, []);
   
-  const handleSaveImage = () => {
-    toast("Image saved to library", {
-      description: "You can find your image in the content library"
+  const handleAddText = useCallback((text: string, fontSize: number, color: string, fontFamily: string) => {
+    if (!fabricCanvasRef.current) return;
+    
+    const canvas = fabricCanvasRef.current;
+    const newText = new fabric.Text(text, {
+      left: canvas.width! / 2,
+      top: canvas.height! / 2,
+      fontSize: fontSize,
+      fill: color,
+      fontFamily: fontFamily,
+      originX: 'center',
+      originY: 'center',
     });
-  };
+    
+    canvas.add(newText);
+    canvas.setActiveObject(newText);
+    canvas.renderAll();
+    
+    toast.success("Text added successfully");
+  }, []);
   
-  const handleDownloadImage = () => {
-    toast("Image downloaded", {
-      description: "Your image has been downloaded to your device"
+  const handleSelectFilter = useCallback((filterName: string) => {
+    if (!fabricCanvasRef.current) return;
+    
+    setSelectedFilter(filterName);
+    const canvas = fabricCanvasRef.current;
+    const activeObjects = canvas.getActiveObjects();
+    const image = activeObjects.find(obj => obj instanceof fabric.Image) as fabric.Image;
+    
+    if (!image) {
+      toast.error("Please select an image first");
+      return;
+    }
+    
+    const filter = filters.find(f => f.name === filterName);
+    if (filter) {
+      filter.apply(canvas, image);
+      toast.success(`Filter "${filterName}" applied`);
+    }
+  }, []);
+  
+  const handleDownload = useCallback((format: string, quality: number) => {
+    if (!fabricCanvasRef.current) return;
+    
+    const canvas = fabricCanvasRef.current;
+    const dataURL = canvas.toDataURL({
+      format: format,
+      quality: quality,
     });
-  };
+    
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = `socialsync-image.${format}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Image downloaded successfully");
+  }, []);
+  
+  const handleSaveToLibrary = useCallback(() => {
+    // In a real app, this would save to a database
+    toast.success("Image saved to your content library");
+  }, []);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -41,7 +115,7 @@ export default function ImageEditor() {
         </p>
       </div>
 
-      <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="edit" value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upload">Upload</TabsTrigger>
           <TabsTrigger value="edit">Edit</TabsTrigger>
@@ -51,45 +125,11 @@ export default function ImageEditor() {
         <div className="mt-6">
           <TabsContent value="upload" className="space-y-4">
             <Card>
-              <CardHeader>
-                <CardTitle>Upload Media</CardTitle>
-                <CardDescription>
-                  Upload an image to start editing
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border-2 border-dashed border-border rounded-lg p-12 text-center cursor-pointer hover:border-brand-purple transition-colors">
-                  <div className="flex flex-col items-center justify-center space-y-3">
-                    <div className="bg-accent rounded-full p-3">
-                      <Upload className="h-6 w-6 text-brand-purple" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Drag and drop or click to upload</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Support for JPG, PNG, SVG
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="border border-muted rounded-lg p-2 cursor-pointer hover:border-brand-purple">
-                    <div className="aspect-square bg-muted rounded-md flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <p className="text-xs text-center mt-2 text-muted-foreground">sample-1.jpg</p>
-                  </div>
-                  <div className="border border-muted rounded-lg p-2 cursor-pointer hover:border-brand-purple">
-                    <div className="aspect-square bg-muted rounded-md flex items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <p className="text-xs text-center mt-2 text-muted-foreground">sample-2.jpg</p>
-                  </div>
-                </div>
-                
+              <CardContent className="pt-6">
+                <EditorCanvas editorState={editorState} onImageLoaded={handleImageLoaded} />
                 <div className="pt-4 flex justify-end">
-                  <Button onClick={handleImageUpload}>
-                    Continue to Edit <Check className="ml-2 h-4 w-4" />
+                  <Button onClick={() => setActiveTab("edit")} disabled={!imageLoaded}>
+                    Continue to Edit
                   </Button>
                 </div>
               </CardContent>
@@ -100,26 +140,15 @@ export default function ImageEditor() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
                 <Card className="h-full">
-                  <CardHeader>
-                    <CardTitle>Canvas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-[4/3] bg-accent rounded-lg flex items-center justify-center">
-                      <div className="text-muted-foreground text-sm flex flex-col items-center">
-                        <Image className="h-12 w-12 mb-2" />
-                        <span>Image preview will appear here</span>
-                      </div>
-                    </div>
+                  <CardContent className="pt-6">
+                    <EditorCanvas editorState={editorState} onImageLoaded={handleImageLoaded} />
                   </CardContent>
                 </Card>
               </div>
               
-              <div className="md:col-span-1">
-                <Card className="h-full">
-                  <CardHeader>
-                    <CardTitle>Edit Options</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
+              <div className="md:col-span-1 space-y-6">
+                <Card>
+                  <CardContent className="pt-6 space-y-6">
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-sm font-medium">Brightness</span>
@@ -131,6 +160,7 @@ export default function ImageEditor() {
                         max={200}
                         step={1}
                         onValueChange={setBrightness}
+                        disabled={!imageLoaded}
                       />
                     </div>
                     
@@ -145,97 +175,44 @@ export default function ImageEditor() {
                         max={200}
                         step={1}
                         onValueChange={setContrast}
+                        disabled={!imageLoaded}
                       />
                     </div>
-                    
-                    <Separator />
-                    
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" className="w-full">
-                        <Text className="h-4 w-4 mr-2" /> Add Text
-                      </Button>
-                      <Button variant="outline" className="w-full">
-                        <Edit className="h-4 w-4 mr-2" /> Crop
-                      </Button>
-                    </div>
-                    
-                    <Button className="w-full" onClick={() => setActiveTab("export")}>
-                      Continue to Export <Check className="ml-2 h-4 w-4" />
-                    </Button>
                   </CardContent>
                 </Card>
+                
+                <FilterOptions
+                  onSelectFilter={handleSelectFilter}
+                  selectedFilter={selectedFilter}
+                />
+                
+                <TextControls onAddText={handleAddText} />
+                
+                <Button className="w-full" onClick={() => setActiveTab("export")} disabled={!imageLoaded}>
+                  Continue to Export
+                </Button>
               </div>
             </div>
           </TabsContent>
           
           <TabsContent value="export" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Export Options</CardTitle>
-                <CardDescription>
-                  Save or download your edited image
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="aspect-[4/3] bg-accent rounded-lg flex items-center justify-center">
-                  <div className="text-muted-foreground text-sm flex flex-col items-center">
-                    <Image className="h-12 w-12 mb-2" />
-                    <span>Final image preview</span>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Export Settings</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-2 gap-2 items-center">
-                          <span className="text-sm font-medium">Format:</span>
-                          <select className="rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
-                            <option>PNG</option>
-                            <option>JPG</option>
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 items-center">
-                          <span className="text-sm font-medium">Quality:</span>
-                          <select className="rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
-                            <option>High</option>
-                            <option>Medium</option>
-                            <option>Low</option>
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 items-center">
-                          <span className="text-sm font-medium">Size:</span>
-                          <select className="rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm">
-                            <option>Original</option>
-                            <option>Pinterest Pin (1000×1500)</option>
-                            <option>Custom</option>
-                          </select>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Actions</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-col space-y-2">
-                        <Button variant="outline" className="w-full" onClick={handleSaveImage}>
-                          <Save className="h-4 w-4 mr-2" /> Save to Library
-                        </Button>
-                        <Button className="w-full" onClick={handleDownloadImage}>
-                          <Download className="h-4 w-4 mr-2" /> Download
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <Card className="h-full">
+                  <CardContent className="pt-6">
+                    <EditorCanvas editorState={editorState} onImageLoaded={handleImageLoaded} />
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="md:col-span-1">
+                <ExportOptions
+                  onDownload={handleDownload}
+                  onSaveToLibrary={handleSaveToLibrary}
+                  disabled={!imageLoaded}
+                />
+              </div>
+            </div>
           </TabsContent>
         </div>
       </Tabs>
