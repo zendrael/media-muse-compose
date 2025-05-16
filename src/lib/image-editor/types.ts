@@ -1,4 +1,6 @@
 
+import { Canvas, Image, IBaseFilter } from 'fabric';
+
 export interface ImageEditorState {
   brightness: number;
   contrast: number;
@@ -14,5 +16,5 @@ export interface ImageEditorState {
 export interface FilterOption {
   name: string;
   preview: string;
-  apply: (canvas: fabric.Canvas, imageElement: fabric.Image) => void;
+  apply: (canvas: Canvas, imageElement: Image) => void;
 }

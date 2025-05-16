@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { fabric } from 'fabric';
+import { Canvas, Image } from 'fabric';
 import { toast } from 'sonner';
 import { applyBrightnessContrast } from '@/lib/image-editor/filters';
 import type { ImageEditorState } from '@/lib/image-editor/types';
@@ -12,14 +12,14 @@ interface EditorCanvasProps {
 
 const EditorCanvas: React.FC<EditorCanvasProps> = ({ editorState, onImageLoaded }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricRef = useRef<fabric.Canvas | null>(null);
-  const imageRef = useRef<fabric.Image | null>(null);
+  const fabricRef = useRef<Canvas | null>(null);
+  const imageRef = useRef<Image | null>(null);
   
   // Initialize fabric canvas
   useEffect(() => {
     if (!canvasRef.current) return;
     
-    const canvas = new fabric.Canvas(canvasRef.current, {
+    const canvas = new Canvas(canvasRef.current, {
       width: 800,
       height: 600,
       backgroundColor: '#f8f9fa'
@@ -47,7 +47,7 @@ const EditorCanvas: React.FC<EditorCanvasProps> = ({ editorState, onImageLoaded 
     reader.onload = (event) => {
       if (!event.target?.result) return;
       
-      fabric.Image.fromURL(event.target.result.toString(), (img) => {
+      Image.fromURL(event.target.result.toString(), (img) => {
         if (!fabricRef.current) return;
         
         // Clear canvas

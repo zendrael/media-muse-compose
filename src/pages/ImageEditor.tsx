@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Upload, Image as ImageIcon, Save, Download } from "lucide-react";
 import { toast } from "sonner";
-import { fabric } from 'fabric';
+import { Canvas, Text } from 'fabric';
 
 import EditorCanvas from "@/components/image-editor/EditorCanvas";
 import TextControls from "@/components/image-editor/TextControls";
@@ -22,7 +21,7 @@ export default function ImageEditor() {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   
-  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  const fabricCanvasRef = useRef<Canvas | null>(null);
   
   const editorState: ImageEditorState = {
     brightness: brightness[0],
@@ -45,7 +44,7 @@ export default function ImageEditor() {
     if (!fabricCanvasRef.current) return;
     
     const canvas = fabricCanvasRef.current;
-    const newText = new fabric.Text(text, {
+    const newText = new Text(text, {
       left: canvas.width! / 2,
       top: canvas.height! / 2,
       fontSize: fontSize,
